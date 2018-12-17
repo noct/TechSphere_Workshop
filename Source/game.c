@@ -90,8 +90,8 @@ typedef struct
     Vec2 pos;
 } Field_Tile;
 
-const uint32_t Field_Width  = 500;
-const uint32_t Field_Height = 500;
+const uint32_t Field_Width  = 1000;
+const uint32_t Field_Height = 1000;
 static Field_Tile* Field_Tiles = NULL;
 
 const float Crop_MinLifetime = 1.0f;
@@ -155,7 +155,7 @@ const float AI_FarmerSearchSpeedMin = 0.0f;
 const float AI_FarmerSearchSpeedMax = 1.0f;
 const float AI_FarmerFarmSpeedMin = 3.0f;
 const float AI_FarmerFarmSpeedMax = 5.0f;
-const uint32_t AI_FarmerCount = 100000;
+const uint32_t AI_FarmerCount = 10000;
 static AI_Farmer* AI_Farmers = NULL;
 
 void ai_tick(float delta)
@@ -216,7 +216,7 @@ void ai_tick(float delta)
                         tile->crop = NULL;
                     }
 
-                    tile->stage = math_max(tile->stage + 1, FieldStage_Fallow);
+                    tile->stage = math_max((tile->stage + 1) % FieldState_Max, FieldStage_Fallow);
 
                     if (tile->stage == FieldStage_Planted)
                     {
