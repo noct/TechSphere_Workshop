@@ -1,0 +1,7 @@
+﻿  In file included from ..\..\Source\main.c:6:
+..\..\Source/3rd/sokol_app.h(793,29): warning : unused function '_sapp_translate_key' [-Wunused-function]
+  _SOKOL_PRIVATE sapp_keycode _sapp_translate_key(int scan_code) {
+                              ^
+  1 warning generated.
+  Workshop.vcxproj -> C:\Users\Alexandre\Desktop\Development\TechSphere_Workshop\Project\VS2017\..\..\Build\x64\Debug\Workshop.exe
+  Workshop.vcxproj -> C:\Users\Alexandre\Desktop\Development\TechSphere_Workshop\Project\VS2017\..\..\Build\x64\Debug\Workshop.pdb (Partial PDB)
