@@ -10,7 +10,7 @@
 // Random
 uint32_t rand_range(uint32_t min, uint32_t max)
 {
-    return ((float)rand() / RAND_MAX) * (max - min) + min;
+    return (uint32_t)(((float)rand() / RAND_MAX) * (max - min) + min);
 }
 
 float rand_rangef(float min, float max)
