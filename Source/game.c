@@ -81,6 +81,7 @@ typedef struct
 {
     float grown;
     float lifetime;
+    uint32_t cropType;
 } Field_Crop;
 
 typedef struct
@@ -96,6 +97,7 @@ static Field_Tile* Field_Tiles = NULL;
 
 const float Crop_MinLifetime = 1.0f;
 const float Crop_MaxLifetime = 10.0f;
+const uint32_t Crop_MaxCropType = 4;
 
 void field_tick(float delta)
 {
@@ -150,12 +152,12 @@ typedef struct
 } AI_Farmer;
 
 const float AI_FarmerSpeed = 0.5f;
-const float AI_FarmerCropRadius = 0.02f;
+const float AI_FarmerCropRadius = 0.005f;
 const float AI_FarmerSearchSpeedMin = 0.0f;
 const float AI_FarmerSearchSpeedMax = 1.0f;
 const float AI_FarmerFarmSpeedMin = 3.0f;
 const float AI_FarmerFarmSpeedMax = 5.0f;
-const uint32_t AI_FarmerCount = 100000;
+const uint32_t AI_FarmerCount = 1000000;
 static AI_Farmer* AI_Farmers = NULL;
 
 void ai_tick(float delta)
@@ -189,10 +191,12 @@ void ai_tick(float delta)
             }
         case FarmerState_Move:
             {
-                Vec2 vel = farmer->moveState.vel;
-                farmer->pos = vec2_add(farmer->pos, vec2_mul(vel, delta));
-
                 Field_Tile* tile = farmer->moveState.tile;
+                float currentDist = vec2_mag(vec2_sub(tile->pos, farmer->pos));
+                Vec2 vel = vec2_mul(farmer->moveState.vel, delta);
+                vel = vec2_mul(vec2_norm(vel), math_minf(vec2_mag(vel), currentDist));
+                farmer->pos = vec2_add(farmer->pos, vel);
+
                 float dist = vec2_mag(vec2_sub(tile->pos, farmer->pos));
                 if (dist < AI_FarmerCropRadius)
                 {
@@ -222,6 +226,7 @@ void ai_tick(float delta)
                     {
                         tile->crop = (Field_Crop*)malloc(sizeof(Field_Crop));
                         tile->crop->grown = rand_rangef(Crop_MinLifetime, Crop_MaxLifetime);
+                        tile->crop->cropType = rand_range(0, Crop_MaxCropType);
                     }
 
                     farmer->state = FarmerState_Search;
@@ -289,10 +294,13 @@ void game_kill(void)
     for (uint32_t i = 0; i < Field_Width * Field_Height; ++i)
     {
         free(Field_Tiles[i].crop);
+        Field_Tiles[i].crop = NULL;
     }
 
     free(Field_Tiles);
+    Field_Tiles = NULL;
     free(AI_Farmers);
+    AI_Farmers = NULL;
 }
 
 uint32_t game_gen_instance_buffer(Game_InstanceBuffer* buffer)
@@ -302,15 +310,15 @@ uint32_t game_gen_instance_buffer(Game_InstanceBuffer* buffer)
     {
         uint32_t writeLoc = writeIndex++;
         buffer->instances[writeLoc].spriteIndex = Game_FieldImageTable[Field_Tiles[i].stage];
-        buffer->instances[writeLoc].scale = 1.0f;
+        buffer->instances[writeLoc].scale = 2.0f / Field_Width;
         buffer->instances[writeLoc].pos[0] = Field_Tiles[i].pos.x;
         buffer->instances[writeLoc].pos[1] = Field_Tiles[i].pos.y;
 
         if (Field_Tiles[i].crop != NULL)
         {
             uint32_t cropWriteIndex = writeIndex++;
-            buffer->instances[cropWriteIndex].spriteIndex = 0; // TODO: Get a crop image index
-            buffer->instances[cropWriteIndex].scale = 1.1f;
+            buffer->instances[cropWriteIndex].spriteIndex = 7.0f + Field_Tiles[i].crop->cropType;
+            buffer->instances[cropWriteIndex].scale = 2.0f / Field_Width;
 
             buffer->instances[cropWriteIndex].pos[0] = Field_Tiles[i].pos.x;
             buffer->instances[cropWriteIndex].pos[1] = Field_Tiles[i].pos.y;
@@ -321,7 +329,7 @@ uint32_t game_gen_instance_buffer(Game_InstanceBuffer* buffer)
     {
         uint32_t writeLoc = writeIndex++;
         buffer->instances[writeLoc].spriteIndex = Game_FarmerImageTable[AI_Farmers[i].state];
-        buffer->instances[writeLoc].scale = 1.5f;
+        buffer->instances[writeLoc].scale = 0.025f;
         buffer->instances[writeLoc].pos[0] = AI_Farmers[i].pos.x;
         buffer->instances[writeLoc].pos[1] = AI_Farmers[i].pos.y;
     }

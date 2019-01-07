@@ -180,9 +180,10 @@ const char* Render_VS =
     "out vec2 uv;\n"
     "void main()\n"
     "{\n"
+    "  const float kImageCount = 11.0;\n"
     "  vec2 vertexPos = vec2(gl_VertexID / 2, gl_VertexID & 1);\n"
-    "  gl_Position = vec4((position + vertexPos * 0.05 * scale / vec2(aspect, 1.0)), 0.0, 1.0);\n"
-    "  uv = vec2(vertexPos.x / 8.0 + sprite / 8.0, 1.0 - vertexPos.y);\n"
+    "  gl_Position = vec4((position + vertexPos * scale / vec2(aspect, 1.0)), 0.0, 1.0);\n"
+    "  uv = vec2(vertexPos.x / kImageCount + sprite / kImageCount, 1.0 - vertexPos.y);\n"
     "}\n";
 
 const char* Render_FS = 
