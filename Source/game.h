@@ -6,7 +6,7 @@ void game_init(void);
 void game_tick(float delta);
 void game_kill(void);
 
-#define GAME_MAX_INSTANCE_COUNT 10000000
+#define GAME_MAX_INSTANCE_COUNT 50000000
 typedef struct
 {
     float spriteIndex;

@@ -10,7 +10,7 @@
 // Random
 uint32_t rand_range(uint32_t min, uint32_t max)
 {
-    return ((float)rand() / RAND_MAX) * (max - min) + min;
+    return (uint32_t)(((float)rand() / RAND_MAX) * (max - min) + min);
 }
 
 float rand_rangef(float min, float max)
@@ -220,7 +220,7 @@ void ai_tick(float delta)
                         tile->crop = NULL;
                     }
 
-                    tile->stage = math_max(tile->stage + 1, FieldStage_Fallow);
+                    tile->stage = math_max((tile->stage + 1) % FieldState_Max, FieldStage_Fallow);
 
                     if (tile->stage == FieldStage_Planted)
                     {
