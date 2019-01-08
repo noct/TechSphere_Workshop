@@ -175,7 +175,7 @@ void ai_tick(float delta)
 
                 if (farmer->searchState.searchTimer <= 0.0f)
                 {
-                    uint32_t tileIndex = rand_range(0U, Field_Width * Field_Height);
+                    uint32_t tileIndex = rand_range(0U, Field_Width * Field_Height - 1);
                     Field_Tile* tile = &Field_Tiles[tileIndex];
 
                     if (tile->stage != FieldStage_Planted)
