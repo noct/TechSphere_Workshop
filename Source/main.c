@@ -13,6 +13,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "3rd/Mist_Profiler.h"
+MIST_PROFILE_DEFINE_GLOBALS
+
+#include <time.h>
+
 const uint16_t Window_Width = 1024;
 const uint16_t Window_Height = 720;
 const char* Window_Title = "Holy Cheese";
@@ -33,6 +38,8 @@ typedef struct
 
 void core_init(void)
 {
+	Mist_ProfileInit();
+
     stm_setup();
 
     sg_desc desc = {0};
@@ -125,6 +132,7 @@ void core_init(void)
 
 void core_frame(void)
 {
+	MIST_BEGIN_PROFILE("main", "core_frame");
     int width = sapp_width();
     int height = sapp_height();
 
@@ -133,21 +141,61 @@ void core_frame(void)
 
     uint32_t instanceCount = game_gen_instance_buffer(Render_InstanceBuffer);
 
-    sg_update_buffer(Render_DrawState.vertex_buffers[0], Render_InstanceBuffer, sizeof(Game_Instance) * instanceCount);
+	{
+		MIST_BEGIN_PROFILE("main", "sg_update_buffer");
+		sg_update_buffer(Render_DrawState.vertex_buffers[0], Render_InstanceBuffer, sizeof(Game_Instance) * instanceCount);
+		MIST_END_PROFILE("main", "sg_update_buffer");
+	}
 
-    sg_pass_action passAction =
-    {
-        .colors[0] = { .action = SG_ACTION_CLEAR, .val = { 0.1f, 0.1f, 0.1f, 1.0f } }
-    };
-    sg_begin_default_pass(&passAction, (int)width, (int)height);
-    sg_apply_draw_state(&Render_DrawState);
-    sg_apply_uniform_block(SG_SHADERSTAGE_VS, 0, &(Render_VSParams){.aspect = (float)width / height}, sizeof(Render_VSParams));
-    if (instanceCount > 0)
-    {
-        sg_draw(0, 6, instanceCount);
-    }
-    sg_end_pass();
-    sg_commit();
+	{
+		MIST_BEGIN_PROFILE("main", "sg_pass");
+		sg_pass_action passAction =
+		{
+			.colors[0] = { .action = SG_ACTION_CLEAR, .val = { 0.1f, 0.1f, 0.1f, 1.0f } }
+		};
+		sg_begin_default_pass(&passAction, (int)width, (int)height);
+		sg_apply_draw_state(&Render_DrawState);
+		sg_apply_uniform_block(SG_SHADERSTAGE_VS, 0, &(Render_VSParams){.aspect = (float)width / height}, sizeof(Render_VSParams));
+		if (instanceCount > 0)
+		{
+			sg_draw(0, 6, instanceCount);
+		}
+		sg_end_pass();
+		MIST_END_PROFILE("main", "sg_pass");
+	}
+	{
+		MIST_BEGIN_PROFILE("main", "sg_commit");
+		sg_commit();
+		MIST_END_PROFILE("main", "sg_commit");
+	}
+	MIST_END_PROFILE("main", "core_frame");
+}
+
+void core_trace(void)
+{
+	char timestamp[32] = { 0 };
+	char filename[32] = { 0 };
+	time_t t = time(0);
+	struct tm* tm = localtime(&t);
+	strftime(timestamp, 32, "%Y%m%d-%H%M%S", tm);
+	sprintf(filename, "%s.trace.json", timestamp);
+
+	if(Mist_ProfileListSize() == 0)
+	{
+		// Adds the current buffer to the list of buffers even if it hasn't been filled up yet.
+		Mist_FlushThreadBuffer();
+	}
+
+	FILE* tracefile = fopen(filename, "w");
+	if(tracefile)
+	{
+		char* samples = Mist_Flush();
+		fprintf(tracefile, "%s", mist_ProfilePreface);
+		fprintf(tracefile, "%s", samples);
+		fprintf(tracefile, "%s", mist_ProfilePostface);
+		fclose(tracefile);
+	}
+	Mist_ProfileTerminate();
 }
 
 void core_cleanup(void)
@@ -156,6 +204,7 @@ void core_cleanup(void)
     free(Render_InstanceBuffer);
 
     sg_shutdown();
+	core_trace();
 }
 
 sapp_desc sokol_main(int argc, char* argv[])

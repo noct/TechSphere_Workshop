@@ -7,6 +7,9 @@
 #include <math.h>
 #include <time.h>
 
+#include "3rd/Mist_Profiler.h"
+
+
 // Random
 uint32_t rand_range(uint32_t min, uint32_t max)
 {
@@ -101,6 +104,7 @@ const uint32_t Crop_MaxCropType = 4;
 
 void field_tick(float delta)
 {
+	MIST_BEGIN_PROFILE("game", "field_tick");
     for (uint32_t i = 0; i < Field_Width * Field_Height; ++i)
     {
         if (Field_Tiles[i].stage == FieldStage_Planted)
@@ -114,6 +118,7 @@ void field_tick(float delta)
             }
         }
     }
+	MIST_END_PROFILE("game", "field_tick");
 }
 
 
@@ -162,6 +167,7 @@ static AI_Farmer* AI_Farmers = NULL;
 
 void ai_tick(float delta)
 {
+	MIST_BEGIN_PROFILE("game", "ai_tick");
     for (uint32_t ai = 0; ai < AI_FarmerCount; ++ai)
     {
         AI_Farmer* farmer = &AI_Farmers[ai];
@@ -236,6 +242,7 @@ void ai_tick(float delta)
             }
         }
     }
+	MIST_END_PROFILE("game", "ai_tick");
 }
 
 // Game
@@ -283,10 +290,13 @@ void game_init(void)
 
 void game_tick(float delta)
 {
+	MIST_BEGIN_PROFILE("game", "game_tick");
     delta = math_minf(delta, 0.02f);
 
     field_tick(delta);
     ai_tick(delta);
+
+	MIST_END_PROFILE("game", "game_tick");
 }
 
 void game_kill(void)
@@ -305,6 +315,7 @@ void game_kill(void)
 
 uint32_t game_gen_instance_buffer(Game_InstanceBuffer* buffer)
 {
+	MIST_BEGIN_PROFILE("game", "game_gen_instance_buffer");
     uint32_t writeIndex = 0;
     for (uint32_t i = 0; i < Field_Width * Field_Height; ++i)
     {
@@ -334,5 +345,6 @@ uint32_t game_gen_instance_buffer(Game_InstanceBuffer* buffer)
         buffer->instances[writeLoc].pos[1] = AI_Farmers[i].pos.y;
     }
 
+	MIST_END_PROFILE("game", "game_gen_instance_buffer");
     return writeIndex;
 }
